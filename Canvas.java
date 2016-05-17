@@ -12,7 +12,6 @@ import java.util.ArrayList;
  */
 public class Canvas extends JPanel implements MouseListener, MouseMotionListener {
     ArrayList<DShape> shapes = new ArrayList<>();
-    DShape currentShape = new DShape();
 
     JTable table = null;
     String[] columns = {"x", "y", "width", "height", "type"};
@@ -55,11 +54,13 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         }
         table = new JTable(rowData, columns);
 
+        // Set column width
         TableColumn column = null;
         for (int j = 0; j < 5; j++) {
             column = table.getColumnModel().getColumn(j);
             column.setPreferredWidth(80);
         }
+
         return table;
     }
 
@@ -82,10 +83,15 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
 
     }
 
-    public void addShape(DShape shape) {
-        currentShape = shape;
-        shapes.add(shape);
+    public void addShape(DShapeModel shapeModel) {
+        // check if shapeModel is properly filled out
+        if (shapeModel.getShape() != null) {
+            // create shape
+            shapes.add(shapeModel.getShape());
+
+        }
         getTable();
+
     }
 
     @Override

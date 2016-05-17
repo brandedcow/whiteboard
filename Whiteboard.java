@@ -4,12 +4,16 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Chris on 5/16/2016.
  */
 public class Whiteboard extends JFrame {
     Canvas canvas;
+    boolean random = true;
+
 
     Whiteboard(){
         // GUI stuff
@@ -42,9 +46,10 @@ public class Whiteboard extends JFrame {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         DShape rect = new DRect();
-                        DRectModel rectModel = new DRectModel();
+                        DRectModel rectModel = new DRectModel(random);
                         rect.addModel(rectModel);
-                        canvas.addShape(rect);
+                        canvas.addShape(rectModel);
+
                         //update table
                         JTable table = new JTable();
                         table = canvas.getTable();
@@ -61,9 +66,10 @@ public class Whiteboard extends JFrame {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         DShape oval = new DOval();
-                        DOvalModel ovalModel = new DOvalModel();
+                        DOvalModel ovalModel = new DOvalModel(random);
                         oval.addModel(ovalModel);
-                        canvas.addShape(oval);
+                        canvas.addShape(ovalModel);
+
                         //update table
                         JTable table = new JTable();
                         table = canvas.getTable();

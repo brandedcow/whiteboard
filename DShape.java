@@ -11,6 +11,10 @@ public class DShape {
         dsm = new DShapeModel();
     }
 
+    DShape(DShapeModel model) {
+        dsm = model;
+    }
+
     public int getX() {
         return dsm.getX();
     }
@@ -35,8 +39,8 @@ public class DShape {
         return dsm.getColor();
     }
 
-    public String getShape() {
-        return dsm.getType();
+    public DShape getShape() {
+        return dsm.getShape();
     }
 
     public void addModel(DShapeModel d) {

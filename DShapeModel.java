@@ -8,12 +8,14 @@ public class DShapeModel {
     Point point;
     Color color;
     String type;
+    DShape dShape;
 
     DShapeModel(){
         bounds = new Rectangle(0,0,0,0);
         point = new Point(0,0);
         color = Color.gray;
         type = "";
+        dShape = null;
     }
 
     public int getX() {
@@ -62,5 +64,13 @@ public class DShapeModel {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public DShape getShape() {
+        return dShape;
+    }
+
+    public void setShape(DShape shape){
+        this.dShape = shape;
     }
 }
