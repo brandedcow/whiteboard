@@ -13,7 +13,12 @@ public class DRect extends DShape {
     }
 
     public void draw(Graphics2D g2) {
-        g2.setColor(dsm.getColor());
+        if (selected){
+            g2.setColor(dsm.getColor().brighter());
+            selected = false;
+        } else {
+            g2.setColor(dsm.getColor());
+        }
         g2.fillRect(dsm.getX(),dsm.getY(),dsm.getWidth(),dsm.getHeight());
     }
 }

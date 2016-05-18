@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -6,14 +7,14 @@ import java.util.Random;
  */
 public class DOvalModel extends DShapeModel {
     DOvalModel() {
-        bounds = new Rectangle(0, 0, 50, 50);
-        point = new Point(0, 0);
         color = Color.gray;
         type = "oval";
         dShape = new DOval(this);
+        modelListeners = new ArrayList<>();
+
     }
 
-    DOvalModel(boolean random){
+     DOvalModel(boolean random){
         if (random) {
             Random r = new Random();
             //------------------------------------------------------------
@@ -36,14 +37,17 @@ public class DOvalModel extends DShapeModel {
             point = new Point(x, y);
 
             //------------------------------------------------------------
-            // Randomize Color
+            /* Randomize Color
             float red = r.nextFloat();
             float green = r.nextFloat();
             float blue = r.nextFloat();
-            color = new Color(red,green,blue);
+            color = new Color(red,green,blue);*/
 
+            color = Color.GRAY;
             type = "oval";
             dShape = new DOval(this);
+            modelListeners = new ArrayList<>();
+
         }
     }
 }

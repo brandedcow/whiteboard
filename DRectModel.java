@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -6,14 +7,14 @@ import java.util.Random;
  */
 public class DRectModel extends DShapeModel {
     DRectModel() {
-        bounds = new Rectangle(0, 0, 50, 50);
-        point = new Point(0, 0);
         color = Color.gray;
         type = "rect";
         dShape = new DRect(this);
+        modelListeners = new ArrayList<>();
+
     }
 
-    DRectModel(boolean random){
+     DRectModel(boolean random){
         if (random) {
             Random r = new Random();
             //------------------------------------------------------------
@@ -35,14 +36,19 @@ public class DRectModel extends DShapeModel {
             bounds = new Rectangle(x,y,dimX,dimY);
             point = new Point(x, y);
 
-            // Randomize Color
+            /*// Randomize Color
             float red = r.nextFloat();
             float green = r.nextFloat();
             float blue = r.nextFloat();
-            color = new Color(red,green,blue);
+            color = new Color(red,green,blue);*/
+
+            color = Color.GRAY;
             type = "rect";
             dShape = new DRect(this);
+            modelListeners = new ArrayList<>();
+
         }
     }
+
 
 }
