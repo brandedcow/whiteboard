@@ -80,12 +80,21 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         return table;
     }
 
+    public void addShape(DShapeModel shapeModel) {
+        // check if shapeModel is properly filled out
+        if (shapeModel.getShape() != null) {
+            // create shape
+            shapes.add(shapeModel.getShape());
+        }
+        getTable();
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
-        // draws white board
+        // draws base white board
         if (bufferedImage == null) {
             bufferedImage = (BufferedImage) createImage(WIDTH, HEIGHT);
             Graphics2D gc = bufferedImage.createGraphics();
@@ -99,16 +108,11 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
             gc.setColor(Color.WHITE);
             gc.fillRect(0, 0, WIDTH, HEIGHT);
         }
-        if (drag){
-            g2.drawImage(bufferedNoSelected,null, 0,0);
-            drag = false;
-        }
-        else {
-            g2.drawImage(bufferedImage, null, 0, 0);
-        }
+
+        // update image
+        g2.drawImage(bufferedImage, null, 0, 0);
 
         // Paint shapes
-
         for (DShape ds : shapes) {
             ds.draw(g2);
         }
@@ -117,15 +121,26 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
-    public void addShape(DShapeModel shapeModel) {
-        // check if shapeModel is properly filled out
-        if (shapeModel.getShape() != null) {
-            // create shape
-            shapes.add(shapeModel.getShape());
+    private void updateBufferedImage(){
+        //create white
+        bufferedNoSelected = (BufferedImage) createImage(WIDTH, HEIGHT);
+        Graphics2D g2 = bufferedNoSelected.createGraphics();
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, WIDTH, HEIGHT);
+        //create shapes without selected shape
+        for (DShape ds : shapes) {
+            if (ds.getShape() != selectedShape){
+                ds.draw(g2);
+            }
         }
-        getTable();
+
+        selectedShape.draw(g2,bounds);
+        bufferedImage = bufferedNoSelected;
+
     }
 
+    //--------------------------------------------------------------------------------
+    //Mouse Events
     @Override
     public void mousePressed(MouseEvent e) {
         Graphics2D graphics2D = bufferedImage.createGraphics(); //Graphics
@@ -182,24 +197,25 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
     @Override
     public void mouseDragged(MouseEvent e) {
         drag = true;
+        // get current mouse location
         endX = e.getX();
         endY = e.getY();
-        System.out.println("Start (x,y): (" + startX + "," + startY + ")");
-        System.out.println("End (x,y): (" + endX + "," + endY + ")");
+
+        // find displacement
         int dx = endX - startX;
         int dy = endY - startY;
-        System.out.println("dx: " + dx + " dy: " + dy);
-        System.out.println("Original (x,y): " +xCoor + " " +yCoor);
+
+        // new bounds
         bounds = new Rectangle(
                 xCoor+ dx,
                 yCoor+ dy,
                 selectedShape.getWidth(),
                 selectedShape.getHeight());
-        System.out.println(selectedShape.getBounds());
-        System.out.println(bounds);
 
+        //draw image
         Graphics2D g2 = bufferedNoSelected.createGraphics();
-
+        updateBufferedImage();
+        selectedShape.draw(g2, bounds);
 
         repaint();
     }
@@ -208,9 +224,9 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
     public void mouseReleased(MouseEvent e) {
         endX = e.getX();
         endY = e.getY();
-        Graphics2D g2 = bufferedNoSelected.createGraphics();
+        Graphics2D g2 = bufferedImage.createGraphics();
         selectedShape.draw(g2,bounds);
-        this.repaint();
+        repaint();
     }
 
     @Override

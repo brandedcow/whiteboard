@@ -66,7 +66,7 @@ public class DShape implements ModelListener {
     }
     public void drawSelected(Graphics2D g2, Rectangle bounds) {
         selected = true;
-        draw(g2); // problem with brighter
+        draw(g2);
 
     }
 
