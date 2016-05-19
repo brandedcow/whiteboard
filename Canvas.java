@@ -14,7 +14,11 @@ import java.util.ArrayList;
 public class Canvas extends JPanel implements MouseListener, MouseMotionListener {
     ArrayList<DShape> shapes = new ArrayList<>();
     private DShape selectedShape;
+    Point movingPoint = null;
+    Point anchorPoint = new Point(0,0);
+    Rectangle movingKnob = null;
     private Color selected;
+    private Point currentPoint;
 
     private JTable table = null;
     private String[] columns = {"x", "y", "width", "height", "type"};
@@ -22,7 +26,8 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
 
     private BufferedImage bufferedImage = null;
     private BufferedImage bufferedNoSelected = null;
-    private boolean drag = false;
+    private boolean resize = false;
+    private boolean remove = false;
     Rectangle bounds;
 
     private int WIDTH = 400;
@@ -101,7 +106,7 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
             gc.setColor(Color.WHITE);
             gc.fillRect(0, 0, WIDTH, HEIGHT);
         }
-        //bufferedNoSelected = bufferedImage.getSubimage(0,0,WIDTH,HEIGHT);
+
         if (bufferedNoSelected == null) {
             bufferedNoSelected = (BufferedImage) createImage(WIDTH, HEIGHT);
             Graphics2D gc = bufferedNoSelected.createGraphics();
@@ -119,6 +124,7 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         if (selectedShape != null) {
             selectedShape.drawSelected(g2, selectedShape.getBounds());
         }
+        getTable();
     }
 
     private void updateBufferedImage(){
@@ -133,26 +139,103 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
                 ds.draw(g2);
             }
         }
+        if (!remove) {
+            if (selectedShape != null) {
+                selectedShape.draw(g2, bounds);
+                bufferedImage = bufferedNoSelected;
+            }
+        }
+    }
 
-        selectedShape.draw(g2,bounds);
+    public void resizeShape(Rectangle r){
+        resize = true;
+        System.out.println("initiate resize");
+        // initial click is on moving point
+        movingPoint = currentPoint;
+        movingKnob = r;
+
+        // opposite corner from moving point is anchor point
+        ArrayList<Rectangle> temp = selectedShape.getKnobRect();
+        int pointIndex = temp.indexOf(r);
+        int anchorIndex = pointIndex + 2;
+        if (anchorIndex > 3){
+            anchorIndex = (anchorIndex - 4); // pseudo circular array
+        }
+        anchorPoint.setLocation(temp.get(anchorIndex).getX(), temp.get(anchorIndex).getY());
+    }
+
+    public void removeSelected(){
+        remove = true;
+        Graphics2D g2 = null;
+        outerloop:
+        for (DShape shape : shapes){
+            if (selectedShape == shape){
+                g2 = bufferedNoSelected.createGraphics();
+                selectedShape.clear();
+                selectedShape = null;
+                shapes.remove(shape);
+                break outerloop;
+            }
+        }
+
+        getTable();
+
+        //draw image
+        updateBufferedImage();
+        if (g2 != null) {
+            g2.drawImage(bufferedNoSelected, null, 0, 0);
+        }
+        repaint();
+        remove = false;
+    }
+
+    public void moveFront(){
+        int i = -1;
+        i = shapes.indexOf(selectedShape);
+
+        //found
+        if (i != -1){
+            DShape temp = shapes.get(i+1);
+            shapes.set(i+1,shapes.get(i));
+            shapes.set(i,temp);
+        }
+        getTable();
+        repaint();
+    }
+
+    public void moveBack(){
+        int i = -1;
+        i = shapes.indexOf(selectedShape);
+
+        //found
+        if (i != -1){
+            DShape temp = shapes.get(i-1);
+            shapes.set(i-1,shapes.get(i));
+            shapes.set(i,temp);
+        }
+        getTable();
+        repaint();
+    }
+
+    public void updateCanvas(){
+        //create white
+        bufferedNoSelected = (BufferedImage) createImage(WIDTH, HEIGHT);
+        Graphics2D g2 = bufferedNoSelected.createGraphics();
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, WIDTH, HEIGHT);
+        //create shapes without selected shape
+        for (DShape ds : shapes) {
+            if (ds.getShape() != selectedShape){
+                ds.draw(g2);
+            }
+        }
         bufferedImage = bufferedNoSelected;
-
     }
 
     //--------------------------------------------------------------------------------
     //Mouse Events
     @Override
     public void mousePressed(MouseEvent e) {
-        Graphics2D graphics2D = bufferedImage.createGraphics(); //Graphics
-
-        //restore unselected state
-        // no previously selected shape
-        if (selectedShape != null) {
-            graphics2D.setColor(selected);
-            selectedShape.draw(graphics2D);
-        }
-        selectedShape = null; // reset shape
-        this.repaint();
 
         // get coordinates
         currentX = e.getX();
@@ -169,7 +252,6 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
             width = shapes.get(i).getWidth();
             height = shapes.get(i).getHeight();
 
-
             if ((x < currentX && currentX < (x + width))
                     && (y < currentY && currentY < (y + height))) {
                 selectedShape = shapes.get(i);
@@ -179,9 +261,16 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
 
         // if no shape found at coordinates, do nothing
         if (selectedShape != null) {
+            Graphics2D graphics2D = bufferedImage.createGraphics(); //Graphics
             System.out.println("Shape Type: " + selectedShape);
             selected = selectedShape.getColor();
-            selectedShape.drawSelected(graphics2D, selectedShape.getBounds());
+            //refresh canvas
+            updateCanvas();
+            selectedShape.drawSelected(graphics2D, selectedShape.getBounds()); // Problem with double printing
+
+            // set coordinates for move
+            xCoor = selectedShape.getX();
+            yCoor = selectedShape.getY();
         }
 
         startX = e.getX();
@@ -189,14 +278,10 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         endX = e.getX();
         endY = e.getY();
 
-        // set coordinates for mouse dragged
-        xCoor = selectedShape.getX();
-        yCoor = selectedShape.getY();
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        drag = true;
         // get current mouse location
         endX = e.getX();
         endY = e.getY();
@@ -205,18 +290,69 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         int dx = endX - startX;
         int dy = endY - startY;
 
+        // if resizing
+        if (resize){
+            //find displacement from anchor point
+            int rdx = (int)anchorPoint.getX() - endX;
+            int rdy = (int)anchorPoint.getY() - endY;
+
+            // resize cases: flip or no flip
+            if ((rdx < 0)||( rdy < 0)){  //flip required
+                if (rdx < 0 && rdy > 0){ // flip to opposite x
+                    bounds = new Rectangle(
+                            (int)anchorPoint.getX(),
+                            endY,
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                }
+                if (rdx > 0 && rdy < 0){ // flip to opposite y
+                    bounds = new Rectangle(
+                            endX,
+                            (int)anchorPoint.getY(),
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                }
+                if (rdx < 0 && rdy < 0){ // flip to opposite quadrant
+                    bounds = new Rectangle(
+                            (int)anchorPoint.getX(),
+                            (int)anchorPoint.getY(),
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                }
+            }
+            else { // no flip required
+                bounds = new Rectangle(
+                        endX,
+                        endY,
+                        (int) Math.abs(endX - anchorPoint.getX()),
+                        (int) Math.abs(endY - anchorPoint.getY())
+                );
+            }
+            //draw image
+            Graphics2D g2 = bufferedNoSelected.createGraphics();
+            updateBufferedImage();
+            selectedShape.draw(g2, bounds);
+        }
+
         // new bounds
-        bounds = new Rectangle(
-                xCoor+ dx,
-                yCoor+ dy,
-                selectedShape.getWidth(),
-                selectedShape.getHeight());
+        if (!resize) { // not resizing
+            if (selectedShape != null) { // shape found
+                bounds = new Rectangle(
+                        xCoor + dx,
+                        yCoor + dy,
+                        selectedShape.getWidth(),
+                        selectedShape.getHeight()
+                );
 
-        //draw image
-        Graphics2D g2 = bufferedNoSelected.createGraphics();
-        updateBufferedImage();
-        selectedShape.draw(g2, bounds);
-
+                //draw image
+                Graphics2D g2 = bufferedNoSelected.createGraphics();
+                updateBufferedImage();
+                selectedShape.draw(g2, bounds);
+            }
+        }
         repaint();
     }
 
@@ -224,23 +360,14 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
     public void mouseReleased(MouseEvent e) {
         endX = e.getX();
         endY = e.getY();
-        Graphics2D g2 = bufferedImage.createGraphics();
-        selectedShape.draw(g2,bounds);
+        if (resize){
+            resize = false;
+        }
         repaint();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        Graphics2D graphics2D = bufferedImage.createGraphics(); //Graphics
-
-        //restore unselected state
-        // no previously selected shape
-        if (selectedShape != null) {
-            graphics2D.setColor(selected);
-            selectedShape.draw(graphics2D);
-        }
-        selectedShape = null; // reset shape
-        this.repaint();
 
         // get coordinates
         currentX = e.getX();
@@ -249,6 +376,16 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         System.out.println("X: " + currentX);
         System.out.println("Y: " + currentY);
 
+        // if knob found at coordinates, initiate resize
+        currentPoint = new Point(currentX, currentY);
+        if (selectedShape != null) {
+            for (Rectangle rect : selectedShape.getKnobRect()) {
+                if (rect.contains(currentPoint)) {
+                    resizeShape(rect);
+                }
+            }
+        }
+
         // if shape found at coordinates, adjust outer ones first
         outerloop:
         for (int i = (shapes.size() - 1); i >= 0; i--) {
@@ -256,7 +393,6 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
             y = shapes.get(i).getY();
             width = shapes.get(i).getWidth();
             height = shapes.get(i).getHeight();
-
 
             if ((x < currentX && currentX < (x + width))
                     && (y < currentY && currentY < (y + height))) {
@@ -267,6 +403,7 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
 
         // if no shape found at coordinates, do nothing
         if (selectedShape != null) {
+            Graphics2D graphics2D = bufferedImage.createGraphics(); //Graphics
             System.out.println("Shape Type: " + selectedShape);
             selected = selectedShape.getColor();
             selectedShape.drawSelected(graphics2D, selectedShape.getBounds());
@@ -289,6 +426,4 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
     public void mouseMoved(MouseEvent e) {
 
     }
-
-
 }

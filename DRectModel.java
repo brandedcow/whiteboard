@@ -7,6 +7,7 @@ import java.util.Random;
  */
 public class DRectModel extends DShapeModel {
     DRectModel() {
+        bounds = new Rectangle(10,10,20,20);
         color = Color.gray;
         type = "rect";
         dShape = new DRect(this);

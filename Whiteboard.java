@@ -55,7 +55,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                 new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        DRectModel rectModel = new DRectModel(random);
+                        DRectModel rectModel = new DRectModel();
                         canvas.addShape(rectModel);
                         rectModel.addListener(instance);
 
@@ -68,6 +68,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
                         table.setFillsViewportHeight(true);
 
+                        // repaint tablePanel
                         tablePanel.removeAll();
                         tablePanel.add(scrollPane);
                         tablePanel.revalidate();
@@ -80,7 +81,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                 new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        DOvalModel ovalModel = new DOvalModel(random);
+                        DOvalModel ovalModel = new DOvalModel();
                         canvas.addShape(ovalModel);
                         ovalModel.addListener(instance);
 
@@ -134,8 +135,77 @@ public class Whiteboard extends JFrame implements ModelListener {
 
         Box layerControls = Box.createHorizontalBox();
         JButton moveFrontButton = new JButton("Move to Front");
+        moveFrontButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        canvas.moveFront();
+
+                        //update table
+                        JTable table = new JTable();
+                        table = canvas.getTable();
+                        table.setPreferredScrollableViewportSize(new Dimension(400, 175));
+                        JScrollPane scrollPane = new JScrollPane(table);
+                        //scrollPane.setVerticalScrollBar(new JScrollBar());
+                        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                        table.setFillsViewportHeight(true);
+
+                        // repaint tablePanel
+                        tablePanel.removeAll();
+                        tablePanel.add(scrollPane);
+                        tablePanel.revalidate();
+                        repaint();
+                    }
+                }
+        );
         JButton moveBackButton = new JButton("Move to Back");
+        moveBackButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        canvas.moveBack();
+
+                        //update table
+                        JTable table = new JTable();
+                        table = canvas.getTable();
+                        table.setPreferredScrollableViewportSize(new Dimension(400, 175));
+                        JScrollPane scrollPane = new JScrollPane(table);
+                        //scrollPane.setVerticalScrollBar(new JScrollBar());
+                        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                        table.setFillsViewportHeight(true);
+
+                        // repaint tablePanel
+                        tablePanel.removeAll();
+                        tablePanel.add(scrollPane);
+                        tablePanel.revalidate();
+                        repaint();
+                    }
+                }
+        );
         JButton removeButton = new JButton("Remove Shape");
+        removeButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        canvas.removeSelected();
+
+                        //update table
+                        JTable table = new JTable();
+                        table = canvas.getTable();
+                        table.setPreferredScrollableViewportSize(new Dimension(400, 175));
+                        JScrollPane scrollPane = new JScrollPane(table);
+                        //scrollPane.setVerticalScrollBar(new JScrollBar());
+                        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                        table.setFillsViewportHeight(true);
+
+                        // repaint tablePanel
+                        tablePanel.removeAll();
+                        tablePanel.add(scrollPane);
+                        tablePanel.revalidate();
+                        repaint();
+                    }
+                }
+        );
 
         layerControls.add(Box.createHorizontalStrut(10));
         layerControls.add(moveFrontButton);

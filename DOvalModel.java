@@ -7,6 +7,7 @@ import java.util.Random;
  */
 public class DOvalModel extends DShapeModel {
     DOvalModel() {
+        bounds = new Rectangle(10,10,20,20);
         color = Color.gray;
         type = "oval";
         dShape = new DOval(this);
