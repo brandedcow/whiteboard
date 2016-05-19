@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class DShape implements ModelListener {
     protected final int KNOB_SIZE = 9;
-    ArrayList<Rectangle> knobs = null;
+    protected ArrayList<Rectangle> knobs = null;
     DShapeModel dsm;
     boolean selected = false;
 
@@ -71,6 +71,13 @@ public class DShape implements ModelListener {
     public ArrayList<Rectangle> getKnobRect(){
         return knobs;
     }
+    public boolean getFlip(){return false;}
+    public Point getP1(){
+        return dsm.getP1();
+    }
+    public Point getP2(){
+        return dsm.getP2();
+    }
 
     //setters
     public void setColor(Color color){
@@ -84,6 +91,7 @@ public class DShape implements ModelListener {
     }
     public void setP1(int x, int y){}
     public void setP2(int x, int y){}
+    public void setFlip(boolean b){}
 
     public void addModel(DShapeModel d) {
         dsm = d;
