@@ -101,7 +101,39 @@ public class Whiteboard extends JFrame implements ModelListener {
                 }
         );
         JButton lineButton = new JButton("Line");
+        lineButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        DLineModel lineModel = new DLineModel();
+                        canvas.addShape(lineModel);
+                        lineModel.addListener(instance);
+
+                        //update table
+                        JTable table = new JTable();
+                        table = canvas.getTable();
+                        table.setPreferredScrollableViewportSize(new Dimension(400, 175));
+                        JScrollPane scrollPane = new JScrollPane(table);
+                        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                        table.setFillsViewportHeight(true);
+
+                        tablePanel.removeAll();
+                        tablePanel.add(scrollPane);
+                        tablePanel.revalidate();
+                        repaint();
+
+                    }
+                }
+        );
         JButton textButton = new JButton("Text");
+        textButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+                    }
+                }
+        );
 
         addControls.add(Box.createHorizontalStrut(10));
         addControls.add(rectButton);

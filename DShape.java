@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * Created by Chris on 5/16/2016.
  */
 public class DShape implements ModelListener {
-    private final int KNOB_SIZE = 9;
+    protected final int KNOB_SIZE = 9;
     ArrayList<Rectangle> knobs = null;
     DShapeModel dsm;
     boolean selected = false;
@@ -82,6 +82,8 @@ public class DShape implements ModelListener {
         dsm.setWidth((int) rectangle.getWidth());
         dsm.setHeight((int) rectangle.getHeight());
     }
+    public void setP1(int x, int y){}
+    public void setP2(int x, int y){}
 
     public void addModel(DShapeModel d) {
         dsm = d;
@@ -110,11 +112,11 @@ public class DShape implements ModelListener {
     }
     public void drawSelected(Graphics2D g2, Rectangle bounds) {
         selected = true;
-        draw(g2);
-        draw(g2,getKnobs());
+        draw(g2); // draw shape
+        draw(g2,getKnobs()); // draw knobs
     }
 
-    private void updateKnobs(){
+    protected void updateKnobs(){
         knobs = null;
         getKnobs();
     }

@@ -10,6 +10,7 @@ public class DRect extends DShape {
     }
     DRect(DRectModel model){
         dsm = model;
+        dsm.addListener(this);
     }
 
     public void draw(Graphics2D g2) {

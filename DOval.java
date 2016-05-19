@@ -9,6 +9,8 @@ public class DOval extends DShape {
     }
     DOval(DOvalModel model){
         dsm = model;
+        dsm.addListener(this);
+
     }
 
     public void draw(Graphics2D g2) {

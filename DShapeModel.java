@@ -49,6 +49,12 @@ public class DShapeModel {
        // board.modelChanged(this);
     }
 
+    // getter and setter methods for DLine
+    public Point getP1(){return null;}
+    public Point getP2(){return null;}
+    public void setP1(int x, int y){}
+    public void setP2(int x, int y){}
+
     public Rectangle getBounds(){
         return bounds;
     }
