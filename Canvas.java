@@ -338,43 +338,57 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
                 // check p1 or p2 has current point
                 ArrayList<Rectangle> lineKnobs = selectedShape.getKnobRect();
                 outerloop:
-                for (int i =0; i < 2; i++){
-                   if (lineKnobs.get(i).contains(currentPoint)){
-                       if (i == 0){ // lineKnobs(0) == p1
-                           selectedShape.setP1(e.getX(), e.getY()); // p1 to current
-                           anchorPoint.setLocation(selectedShape.getP2()); // p2 to anchor
+                for (int i = 0; i < 2; i++) {
+                    if (lineKnobs.get(i).contains(currentPoint)) {
+                        if (i == 0) { // lineKnobs(0) == p2
+                            selectedShape.setP2(e.getX(), e.getY()); // p2 to current
+                            anchorPoint.setLocation(selectedShape.getP1()); // p1 to anchor
 
-                       }else{ // lineKnobs(1) == p2
-                           selectedShape.setP2(e.getX(), e.getY()); // p2 to current
-                           anchorPoint.setLocation(selectedShape.getP1()); // p1 to anchor
-                       }
-                       break outerloop;
-                   }
+                        } else { // lineKnobs(1) == p1
+                            selectedShape.setP1(e.getX(), e.getY()); // p1 to current
+                            anchorPoint.setLocation(selectedShape.getP2()); // p2 to anchor
+                            break outerloop;
+                        }
+
+                    }
                 }
 
-                selectedShape.setFlip(true);
 
                 // NEED TO SET BOUNDS AND DETERMINE ORDER OF OPERATIONS IN DLINE DRAW
-               /* if ( (rdx < 0 && rdy > 0) ){
+
+                if ((rdx < 0 && rdy > 0)) {
                     bounds = new Rectangle(
-                            (int)anchorPoint.getX(),
-                            (int)anchorPoint.getY()-rdy,
+                            (int) anchorPoint.getX(),
+                            (int) anchorPoint.getY() - rdy,
                             Math.abs(rdx),
                             Math.abs(rdy)
                     );
                     selectedShape.setFlip(true);
+                } else if ((rdx > 0 && rdy < 0)) {
+                    bounds = new Rectangle(
+                            (int) anchorPoint.getX() - rdx,
+                            (int) anchorPoint.getY(),
+                            Math.abs(rdx),
+                            Math.abs(rdy)
+                    );
+                    selectedShape.setFlip(true);
+                } else if (rdx < 0 && rdy < 0) {
+                    bounds = new Rectangle(
+                            (int) anchorPoint.getX(),
+                            (int) anchorPoint.getY(),
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                } else {
+                    bounds = new Rectangle(
+                            e.getX(),
+                            e.getY(),
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
                 }
-                if ((rdx > 0 && rdy < 0) ){
-                    bounds = new Rectangle(
-                            (int)anchorPoint.getX()-rdx,
-                            (int)anchorPoint.getY(),
-                            Math.abs(rdx),
-                            Math.abs(rdy)
-                    );
-                    selectedShape.setFlip(true);
-                }*/
                 updateCanvas();
-                selectedShape.draw(g2,bounds);
+                selectedShape.draw(g2, bounds);
 
             } else {
                 //draw image
