@@ -50,10 +50,8 @@ public class Whiteboard extends JFrame implements ModelListener {
         //--------------------------Menu Bar----------------------------------------
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
-		JMenu mnFile = new JMenu("File");
+		JMenu mnFile = new JMenu("File"); //File menu
 		menuBar.add(mnFile);
-		final JMenu mnConnection = new JMenu("Connection");
-		menuBar.add(mnConnection);
 		final JMenuItem mntmNew = new JMenuItem("New..");
 		mnFile.add(mntmNew);
 		final JMenuItem mntmOpen = new JMenuItem("Open XML..");
@@ -61,7 +59,13 @@ public class Whiteboard extends JFrame implements ModelListener {
 		final JMenuItem mntmSaveAsPng = new JMenuItem("Save as PNG...");
 		mnFile.add(mntmSaveAsPng);
 
-
+		
+		final JMenu mnConnection = new JMenu("Connection"); //Connection menu
+		menuBar.add(mnConnection);
+		final JMenuItem mntmStartServer = new JMenuItem("Start Server");
+		mnConnection.add(mntmStartServer);
+		final JMenuItem mntmJoinServer = new JMenuItem("Join Server");
+		mnConnection.add(mntmJoinServer);
         //---------------------------------------------------------------------------
         // Control Boxes
         Box addControls = Box.createHorizontalBox();
