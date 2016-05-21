@@ -18,35 +18,20 @@ public class DLine extends DShape {
     }
 
     public ArrayList<Point> getKnobs() {
-        ArrayList<Point> knobPoints = new ArrayList<>(4);
-        Point point0 = new Point(getX(), getY());
-        Point point1 = new Point(getX() + getWidth(), getY());
-        Point point2 = new Point(getX() + getWidth(), getY() + getHeight());
-        Point point3 = new Point(getX(), getY() + getHeight());
+        ArrayList<Point> knobPoints = new ArrayList<>(2);
+        Point point0 = new Point((int) dsm.getP1().getX(), (int) dsm.getP1().getY());
+        Point point1 = new Point((int) dsm.getP2().getX(), (int) dsm.getP2().getY());
         knobPoints.add(point0);
         knobPoints.add(point1);
-        knobPoints.add(point2);
-        knobPoints.add(point3);
 
         knobs = null;
-        knobs = new ArrayList<>(4);
+        knobs = new ArrayList<>(2);
         Rectangle rectangle = null;
-        if (flip) {
-            rectangle = new Rectangle((int) dsm.getP1().getX() - 4, (int) dsm.getP1().getY() - 4, KNOB_SIZE, KNOB_SIZE);
-            knobs.add(rectangle);
 
-            rectangle = new Rectangle((int) dsm.getP2().getX() - 4, (int) dsm.getP2().getY() - 4, KNOB_SIZE, KNOB_SIZE);
-            knobs.add(rectangle);
-        } else {
-            rectangle = new Rectangle((int) dsm.getP2().getX() - 4, (int) dsm.getP2().getY() - 4, KNOB_SIZE, KNOB_SIZE);
-            knobs.add(rectangle);
-
-            rectangle = new Rectangle((int) dsm.getP1().getX() - 4, (int) dsm.getP1().getY() - 4, KNOB_SIZE, KNOB_SIZE);
-            knobs.add(rectangle);
-        }
-
-        rectangle = new Rectangle(0, 0, 0, 0);
+        rectangle = new Rectangle((int) point0.getX() - 4, (int) point0.getY() - 4, KNOB_SIZE, KNOB_SIZE);
         knobs.add(rectangle);
+
+        rectangle = new Rectangle((int) point1.getX() - 4, (int) point1.getY() - 4, KNOB_SIZE, KNOB_SIZE);
         knobs.add(rectangle);
 
         return knobPoints;
@@ -93,19 +78,11 @@ public class DLine extends DShape {
 
 
     public void draw(Graphics2D g2, Rectangle bounds) {
-        if (!flip) {
-            setBounds(bounds);
-            setPoints(flip);
-            updateKnobs();
-            draw(g2);
-        } else {
-            draw(g2);
-            setBounds(bounds);
-            System.out.println(bounds);
-            updateKnobs(); // FIX GETKNOBS
-            //setPoints in canvas;
-            flip = false;
-        }
+        setBounds(bounds);
+        setPoints();
+        System.out.println(bounds);
+        updateKnobs();
+        draw(g2);
     }
 
     public void draw(Graphics2D g2, ArrayList<Point> knobs) {
@@ -116,18 +93,14 @@ public class DLine extends DShape {
         g2.setColor(save);
     }
 
-    public void setPoints(boolean flip) {
+    public void setPoints() {
         Rectangle rectangle = dsm.getBounds();
         if (!flip) {
             dsm.setP1((int) rectangle.getX(), (int) rectangle.getY());
-            dsm.setP2((int) (rectangle.getX() + rectangle.getWidth()),
-                    (int) (rectangle.getY() + rectangle.getHeight())
-            );
-
+            dsm.setP2((int) (rectangle.getX() + rectangle.getWidth()), (int) (rectangle.getY() + rectangle.getHeight()));
         } else { // flip
-            dsm.setP1((int) (rectangle.getX()), (int) (rectangle.getY() - rectangle.getHeight()));
+            dsm.setP1((int) (rectangle.getX()), (int) (rectangle.getY() + rectangle.getHeight()));
             dsm.setP2((int) (rectangle.getX() + rectangle.getWidth()), (int) (rectangle.getY()));
-            flip = false;
         }
     }
 

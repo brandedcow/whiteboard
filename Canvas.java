@@ -1,3 +1,5 @@
+import com.sun.media.sound.DLSInfo;
+
 import javax.swing.*;
 import javax.swing.table.TableColumn;
 import java.awt.*;
@@ -151,17 +153,27 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         resize = true;
         System.out.println("initiate resize");
         // initial click is on moving point
-        movingPoint = currentPoint;
-        movingKnob = r;
 
-        // opposite corner from moving point is anchor point
-        ArrayList<Rectangle> temp = selectedShape.getKnobRect();
-        int pointIndex = temp.indexOf(r);
-        int anchorIndex = pointIndex + 2;
-        if (anchorIndex > 3) {
-            anchorIndex = (anchorIndex - 4); // pseudo circular array
+        // if DLine
+        if (selectedShape instanceof DLine) {
+            ArrayList<Rectangle> knobArray = selectedShape.getKnobRect();
+
+            if (knobArray.get(0).contains(currentPoint)) { // p1 is current point
+                anchorPoint.setLocation(knobArray.get(1).getX() + 4, knobArray.get(1).getY() + 4); // set p2 as anchor point
+            } else {        // p2 is current point
+                anchorPoint.setLocation(knobArray.get(0).getX() + 4, knobArray.get(0).getY() + 4); // set p1 as anchor point
+            }
+
+        } else {
+            // opposite corner from moving point is anchor point
+            ArrayList<Rectangle> temp = selectedShape.getKnobRect();
+            int pointIndex = temp.indexOf(r);
+            int anchorIndex = pointIndex + 2;
+            if (anchorIndex > 3) {
+                anchorIndex = (anchorIndex - 4); // pseudo circular array
+            }
+            anchorPoint.setLocation(temp.get(anchorIndex).getX(), temp.get(anchorIndex).getY());
         }
-        anchorPoint.setLocation(temp.get(anchorIndex).getX(), temp.get(anchorIndex).getY());
     }
 
     public void removeSelected() {
@@ -292,11 +304,62 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         int dy = endY - startY;
 
         // if resizing
+        outerloop:
         if (resize) {
-
-            //find displacement from anchor point
+            // if DLine
             int rdx = (int) anchorPoint.getX() - endX;
             int rdy = (int) anchorPoint.getY() - endY;
+
+            // resize cases
+            if (selectedShape instanceof DLine) {
+                // set moving point
+
+                if (rdx < 0 && rdy > 0) { // flip req
+                    bounds = new Rectangle(
+                            (int) anchorPoint.getX(),
+                            (int) anchorPoint.getY() - rdy,
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                    selectedShape.setFlip(true);
+                } else if (rdx > 0 && rdy < 0) { // flip req
+                    bounds = new Rectangle(
+                            (int) anchorPoint.getX() - rdx,
+                            (int) anchorPoint.getY(),
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                    selectedShape.setFlip(true);
+                } else if (rdx < 0 && rdy < 0) { // no flip
+                    bounds = new Rectangle(
+                            (int) anchorPoint.getX(),
+                            (int) anchorPoint.getY(),
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                    selectedShape.setFlip(false);
+                } else {    // no flip
+                    bounds = new Rectangle(
+                            endX,
+                            endY,
+                            (int) Math.abs(endX - anchorPoint.getX()),
+                            (int) Math.abs(endY - anchorPoint.getY())
+                    );
+                    selectedShape.setFlip(false);
+                }// end resize cases
+
+                //draw image
+                Graphics2D g2 = bufferedNoSelected.createGraphics();
+                updateBufferedImage();
+                selectedShape.draw(g2, bounds);
+
+                break outerloop; // exit resize
+            }
+
+
+            //find displacement from anchor point
+            rdx = (int) anchorPoint.getX() - endX;
+            rdy = (int) anchorPoint.getY() - endY;
 
             // resize cases: flip or no flip
             if ((rdx < 0) || (rdy < 0)) {  //flip required
@@ -333,68 +396,11 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
                 );
             }// end resize cases
 
+            //draw image
             Graphics2D g2 = bufferedNoSelected.createGraphics();
-            if (selectedShape instanceof DLine) {
-                // check p1 or p2 has current point
-                ArrayList<Rectangle> lineKnobs = selectedShape.getKnobRect();
-                outerloop:
-                for (int i = 0; i < 2; i++) {
-                    if (lineKnobs.get(i).contains(currentPoint)) {
-                        if (i == 0) { // lineKnobs(0) == p2
-                            selectedShape.setP2(e.getX(), e.getY()); // p2 to current
-                            anchorPoint.setLocation(selectedShape.getP1()); // p1 to anchor
+            updateBufferedImage();
+            selectedShape.draw(g2, bounds);
 
-                        } else { // lineKnobs(1) == p1
-                            selectedShape.setP1(e.getX(), e.getY()); // p1 to current
-                            anchorPoint.setLocation(selectedShape.getP2()); // p2 to anchor
-                            break outerloop;
-                        }
-
-                    }
-                }
-
-
-                // NEED TO SET BOUNDS AND DETERMINE ORDER OF OPERATIONS IN DLINE DRAW
-
-                if ((rdx < 0 && rdy > 0)) {
-                    bounds = new Rectangle(
-                            (int) anchorPoint.getX(),
-                            (int) anchorPoint.getY() - rdy,
-                            Math.abs(rdx),
-                            Math.abs(rdy)
-                    );
-                    selectedShape.setFlip(true);
-                } else if ((rdx > 0 && rdy < 0)) {
-                    bounds = new Rectangle(
-                            (int) anchorPoint.getX() - rdx,
-                            (int) anchorPoint.getY(),
-                            Math.abs(rdx),
-                            Math.abs(rdy)
-                    );
-                    selectedShape.setFlip(true);
-                } else if (rdx < 0 && rdy < 0) {
-                    bounds = new Rectangle(
-                            (int) anchorPoint.getX(),
-                            (int) anchorPoint.getY(),
-                            (int) Math.abs(endX - anchorPoint.getX()),
-                            (int) Math.abs(endY - anchorPoint.getY())
-                    );
-                } else {
-                    bounds = new Rectangle(
-                            e.getX(),
-                            e.getY(),
-                            (int) Math.abs(endX - anchorPoint.getX()),
-                            (int) Math.abs(endY - anchorPoint.getY())
-                    );
-                }
-                updateCanvas();
-                selectedShape.draw(g2, bounds);
-
-            } else {
-                //draw image
-                updateBufferedImage();
-                selectedShape.draw(g2, bounds);
-            }
         } // end resize
 
         // new bounds
@@ -413,7 +419,9 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
                 selectedShape.draw(g2, bounds);
             }
         }
+
         repaint();
+
     }
 
     @Override
