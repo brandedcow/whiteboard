@@ -44,7 +44,7 @@ public class Whiteboard extends JFrame implements ModelListener {
         westBox.setLayout(grid);
 
         // Panel to update table
-        JPanel tablePanel = new JPanel();
+        final JPanel tablePanel = new JPanel();
         tablePanel.setSize(400, 200);
 
         //---------------------------------------------------------------------------
@@ -130,7 +130,24 @@ public class Whiteboard extends JFrame implements ModelListener {
                 new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        DTextModel textModel = new DTextModel();
+                        canvas.addShape(textModel);
+                        textModel.addListener(instance);
 
+                        //update table
+                        JTable table = new JTable();
+                        table = canvas.getTable();
+                        table.setPreferredScrollableViewportSize(new Dimension(400, 175));
+                        JScrollPane scrollPane = new JScrollPane(table);
+                        //scrollPane.setVerticalScrollBar(new JScrollBar());
+                        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                        table.setFillsViewportHeight(true);
+
+                        // repaint tablePanel
+                        tablePanel.removeAll();
+                        tablePanel.add(scrollPane);
+                        tablePanel.revalidate();
+                        repaint();
                     }
                 }
         );
