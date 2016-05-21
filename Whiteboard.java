@@ -14,6 +14,7 @@ public class Whiteboard extends JFrame implements ModelListener {
     private static Whiteboard instance = null;
     Canvas canvas;
     boolean random = true;
+    
 
     protected Whiteboard() {
     }
@@ -46,6 +47,13 @@ public class Whiteboard extends JFrame implements ModelListener {
         // Panel to update table
         final JPanel tablePanel = new JPanel();
         tablePanel.setSize(400, 200);
+        //--------------------------Menu Bar----------------------------------------
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		JMenu mnFile = new JMenu("File");
+		menuBar.add(mnFile);
+		final JMenu mnConnection = new JMenu("Connection");
+		menuBar.add(mnConnection);
 
         //---------------------------------------------------------------------------
         // Control Boxes
@@ -300,5 +308,6 @@ public class Whiteboard extends JFrame implements ModelListener {
     public static void main(String[] args) {
         Whiteboard wb = new Whiteboard();
         wb.theGUI();
-    }
+    }    
 }
+
