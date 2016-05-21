@@ -54,6 +54,13 @@ public class Whiteboard extends JFrame implements ModelListener {
 		menuBar.add(mnFile);
 		final JMenu mnConnection = new JMenu("Connection");
 		menuBar.add(mnConnection);
+		final JMenuItem mntmNew = new JMenuItem("New..");
+		mnFile.add(mntmNew);
+		final JMenuItem mntmOpen = new JMenuItem("Open XML..");
+		mnFile.add(mntmOpen);
+		final JMenuItem mntmSaveAsPng = new JMenuItem("Save as PNG...");
+		mnFile.add(mntmSaveAsPng);
+
 
         //---------------------------------------------------------------------------
         // Control Boxes
