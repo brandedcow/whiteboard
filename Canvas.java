@@ -95,7 +95,14 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
         }
         getTable();
     }
-
+    public void addShape(DShape shapeModel) {
+        // check if shapeModel is properly filled out
+        if (shapeModel.getShape() != null) {
+            // create shape
+            shapes.add(shapeModel.getShape());
+        }
+        getTable();
+    }
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -504,5 +511,9 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
 		updateCanvas();
 		setSelected(null);
         repaint();
+	}
+	public ArrayList<DShape> getShapes() 
+	{
+		return shapes;
 	}
 }

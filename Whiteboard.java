@@ -4,6 +4,9 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.beans.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -70,8 +73,79 @@ public class Whiteboard extends JFrame implements ModelListener {
 		
 		final JMenuItem mntmOpen = new JMenuItem("Open XML..");
 		mnFile.add(mntmOpen);
+		
+		mntmOpen.addActionListener(new ActionListener() {	
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String result = JOptionPane.showInputDialog("Enter File Name", null) + ".xml";
+				if(result != null)
+				{
+					try {
+						XMLDecoder xmlIn = new XMLDecoder(
+								new BufferedInputStream(
+										new FileInputStream(
+												new File(result))));
+						DShape[] array = (DShape[]) xmlIn.readObject();
+						xmlIn.close();
+						canvas.reset();
+						//dTable.reset();
+						for(DShape d: array) {
+			                canvas.addShape(d);
+			            }
+					} catch (IOException o) {
+						o.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		
+		final JMenuItem mntmSave = new JMenuItem("Save As XML...");
+		mnFile.add(mntmSave);	
+		mntmSave.addActionListener(new ActionListener() {	
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String result = JOptionPane.showInputDialog("Enter File Name", null) + ".xml";
+				if(result != null)
+				{
+					try {
+						XMLEncoder xmlOut = new XMLEncoder(
+								new BufferedOutputStream(
+										new FileOutputStream(
+												new File(result))));
+						DShape[] array = canvas.getShapes().toArray(new DShape[0]);
+						
+						xmlOut.writeObject(array);
+						xmlOut.close();
+					} catch (IOException o) {
+						o.printStackTrace();
+					}
+				}
+			}
+		});
 		final JMenuItem mntmSaveAsPng = new JMenuItem("Save as PNG...");
 		mnFile.add(mntmSaveAsPng);
+		mntmSaveAsPng.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String result = JOptionPane.showInputDialog("Enter File Name", null) + ".png";
+				if(result != null)
+				{
+					try {
+						DShape selected = canvas.getSelectedShape();
+						canvas.setSelected(null);
+						BufferedImage image = (BufferedImage) canvas.createImage(canvas.getWidth(), canvas.getHeight());
+						Graphics g = image.getGraphics();
+				        canvas.paintAll(g);
+				        g.dispose();
+				        javax.imageio.ImageIO.write(image, "PNG", new File(result));
+				        canvas.setSelected(selected);
+					} catch (IOException o) {
+						o.printStackTrace();
+					}
+				}
+			}
+		});
 		
 		
 		final JMenu mnConnection = new JMenu("Connection"); //Connection menu
