@@ -500,6 +500,9 @@ public class Canvas extends JPanel implements MouseListener, MouseMotionListener
 	}
 	public void reset() {
 		shapes = new ArrayList<DShape>();
+		table = null;
+		updateCanvas();
 		setSelected(null);
+        repaint();
 	}
 }

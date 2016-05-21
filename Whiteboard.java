@@ -47,18 +47,32 @@ public class Whiteboard extends JFrame implements ModelListener {
         // Panel to update table
         final JPanel tablePanel = new JPanel();
         tablePanel.setSize(400, 200);
-        //--------------------------Menu Bar----------------------------------------
+        //--------------------------Menu Bar------------------------------------------
+        
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
+		
+		//File I/O
 		JMenu mnFile = new JMenu("File"); //File menu
 		menuBar.add(mnFile);
+		
 		final JMenuItem mntmNew = new JMenuItem("New..");
 		mnFile.add(mntmNew);
+		
+		mntmNew.addActionListener(new ActionListener() {	
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				canvas.reset();
+				//dTable.reset();
+				repaint();
+			}
+		});
+		
 		final JMenuItem mntmOpen = new JMenuItem("Open XML..");
 		mnFile.add(mntmOpen);
 		final JMenuItem mntmSaveAsPng = new JMenuItem("Save as PNG...");
 		mnFile.add(mntmSaveAsPng);
-
+		
 		
 		final JMenu mnConnection = new JMenu("Connection"); //Connection menu
 		menuBar.add(mnConnection);
