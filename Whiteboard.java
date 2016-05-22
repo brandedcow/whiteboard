@@ -7,7 +7,11 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.beans.*;
 import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -15,6 +19,9 @@ import java.util.Random;
  */
 public class Whiteboard extends JFrame implements ModelListener {
     private static Whiteboard instance = null;
+	private Server serverAccepter;
+	private Client clientHandler;
+	private ArrayList<ObjectOutputStream> outputs;
     Canvas canvas;
     boolean random = true;
     
@@ -30,6 +37,9 @@ public class Whiteboard extends JFrame implements ModelListener {
     }
 
     public void theGUI() {
+		outputs = new ArrayList<>();
+		serverAccepter = null;
+		clientHandler = null;
         // GUI stuff
         setTitle("Whiteboard");
         setSize(900, 450);
@@ -147,17 +157,12 @@ public class Whiteboard extends JFrame implements ModelListener {
 			}
 		});
 		
+
 		
-		final JMenu mnConnection = new JMenu("Connection"); //Connection menu
-		menuBar.add(mnConnection);
-		final JMenuItem mntmStartServer = new JMenuItem("Start Server");
-		mnConnection.add(mntmStartServer);
-		final JMenuItem mntmJoinServer = new JMenuItem("Join Server");
-		mnConnection.add(mntmJoinServer);
         //---------------------------------------------------------------------------
         // Control Boxes
         Box addControls = Box.createHorizontalBox();
-        JButton rectButton = new JButton("Rect");
+        final JButton rectButton = new JButton("Rect");
         rectButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -183,7 +188,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                     }
                 }
         );
-        JButton ovalButton = new JButton("Oval");
+        final JButton ovalButton = new JButton("Oval");
         ovalButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -207,7 +212,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                     }
                 }
         );
-        JButton lineButton = new JButton("Line");
+        final JButton lineButton = new JButton("Line");
         lineButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -232,7 +237,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                     }
                 }
         );
-        JButton textButton = new JButton("Text");
+        final JButton textButton = new JButton("Text");
         textButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -270,7 +275,7 @@ public class Whiteboard extends JFrame implements ModelListener {
         addControls.add(Box.createHorizontalStrut(10));
 
         Box setControls = Box.createHorizontalBox();
-        JButton setColorButton = new JButton("Set Color");
+        final JButton setColorButton = new JButton("Set Color");
         setColorButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -290,7 +295,7 @@ public class Whiteboard extends JFrame implements ModelListener {
         setControls.add(Box.createHorizontalStrut(10));
 
         Box layerControls = Box.createHorizontalBox();
-        JButton moveFrontButton = new JButton("Move to Front");
+        final JButton moveFrontButton = new JButton("Move to Front");
         moveFrontButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -314,7 +319,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                     }
                 }
         );
-        JButton moveBackButton = new JButton("Move to Back");
+        final JButton moveBackButton = new JButton("Move to Back");
         moveBackButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -338,7 +343,7 @@ public class Whiteboard extends JFrame implements ModelListener {
                     }
                 }
         );
-        JButton removeButton = new JButton("Remove Shape");
+        final JButton removeButton = new JButton("Remove Shape");
         removeButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -397,16 +402,225 @@ public class Whiteboard extends JFrame implements ModelListener {
         westBox.add(tablePanel);
         add(westBox, BorderLayout.WEST);
         setVisible(true);
+        
+		//----------------------------------Server Connection-----------------------
+		
+        final JLabel lblClientMode = new JLabel("CLIENT MODE");
+		lblClientMode.setForeground(Color.RED);
+		lblClientMode.setVisible(false);
+
+		final JLabel lblServerMode = new JLabel("SERVER MODE");
+		lblServerMode.setHorizontalAlignment(SwingConstants.LEFT);
+		lblServerMode.setForeground(Color.RED);
+		lblServerMode.setVisible(false);
+		
+		
+		final JMenu mnConnection = new JMenu("Connection"); //Connection menu
+		menuBar.add(mnConnection);
+		final JMenuItem mntmStartServer = new JMenuItem("Start Server");
+		mnConnection.add(mntmStartServer);
+		
+		mntmStartServer.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				doServer();
+				mnConnection.setEnabled(false);
+				lblServerMode.setVisible(true);
+			}
+		});
+		
+		final JMenuItem mntmJoinServer = new JMenuItem("Join Server");
+		mnConnection.add(mntmJoinServer);
+
+		mntmJoinServer.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				doClient();
+				canvas.reset();
+				// Disable all buttons on client except save
+				mntmJoinServer.setEnabled(false);
+				mntmStartServer.setEnabled(false);
+				mntmNew.setEnabled(false);
+				mntmOpen.setEnabled(false);
+				lineButton.setEnabled(false);
+				moveBackButton.setEnabled(false);
+				moveFrontButton.setEnabled(false);
+				ovalButton.setEnabled(false);
+				rectButton.setEnabled(false);
+				removeButton.setEnabled(false);
+				setColorButton.setEnabled(false);
+				textButton.setEnabled(false);
+				lblClientMode.setVisible(true);
+				canvas.removeMouseListener(canvas);
+				canvas.removeMouseMotionListener(canvas);
+			}
+		});
+		
+		
+		
     }
 
     @Override
     public void modelChanged(DShapeModel model) {
         instance.repaint();
     }
-
+	//start client
+	public void doClient() {
+		String result = JOptionPane.showInputDialog("Connect to host:port", "127.0.0.1:5555");
+		while (result == null)
+		{
+			result = JOptionPane.showInputDialog("Connect to host:port", "127.0.0.1:5555");
+		}
+		if (result != null) {
+			String[] parts = result.split(":");
+			clientHandler = new Client(parts[0].trim(), Integer.parseInt(parts[1].trim()));
+			clientHandler.start();
+			JOptionPane.showMessageDialog(canvas, "Successful connection to server.");
+		}
+	}
+	public void doServer() {
+		String result = JOptionPane.showInputDialog("Enter Port Number (100 - 25565)", 5555);
+		while (Integer.parseInt(result) < 100 || Integer.parseInt(result) > 25565)
+		{
+			result = JOptionPane.showInputDialog("Enter a Valid Port Number from 100 to 25565", 5555);
+		}
+		if (result != null) {
+			serverAccepter = new Server(Integer.parseInt(result.trim()));
+			serverAccepter.start();
+			JOptionPane.showMessageDialog(canvas, "Server started successfully.");
+		}
+	}
+	//add client to server
+    public synchronized void addOutput(ObjectOutputStream out) {
+        outputs.add(out);
+    }
+    //send a command object
+    public void doSend(String command, DShape shape) {
+        Command cmd = new Command();
+        cmd.setCommand(command);
+        cmd.setShape(shape);
+        sendRemote(cmd);
+    }
+    //actual writing from server to clients
+    public synchronized void sendRemote(Command message) {
+        // Convert the message object into an xml string.
+        OutputStream memStream = new ByteArrayOutputStream();
+        XMLEncoder encoder = new XMLEncoder(memStream);
+        encoder.writeObject(message);
+        encoder.close();
+        String xmlString = memStream.toString();
+        // Now write that xml string to all the clients.
+        Iterator<ObjectOutputStream> it = outputs.iterator();
+        while (it.hasNext()) {
+            ObjectOutputStream out = it.next();
+            try {
+                out.writeObject(xmlString);
+                out.flush();
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                it.remove();
+            }
+        }
+    }
+    //One time sync for clients
+    public void sync() {
+    	if (outputs.size() != 0) {
+    		doSend("reset", null);
+    		for(int i = 0; i < canvas.getShapes().size(); i++)
+    		{
+    			doSend("add", canvas.getShapes().get(i));
+    		}
+    	}
+    }
     public static void main(String[] args) {
         Whiteboard wb = new Whiteboard();
         wb.theGUI();
     }    
+
+	//Server Class
+	class Server extends Thread {
+		
+		private int port;
+
+		public Server(int port) {
+			this.port = port;
+		}
+		
+		public void run() {
+	        try {
+	            ServerSocket serverSocket = new ServerSocket(port);
+	            while (true) {
+	                Socket toClient = null;
+	                toClient = serverSocket.accept();
+	                outputs = new ArrayList<ObjectOutputStream>();
+	                addOutput(new ObjectOutputStream(toClient.getOutputStream()));
+	                	sync();
+	            }
+	        } catch (IOException ex) {
+	            ex.printStackTrace();
+	            JOptionPane.showMessageDialog(rootPane, "Failed to Start Server. Please restart the application.");
+	            System.exit(0); // Bad way to handle
+	        }
+	    }
+	}
+	
+
+	//Client Class
+	class Client extends Thread {
+		private String name;
+		private int port;
+		
+		public Client(String name, int port) {
+			this.name = name;
+			this.port = port;
+		}
+		
+		public void run() {
+	        try {
+	            Socket toServer = new Socket(name, port);
+	            ObjectInputStream in = new ObjectInputStream(toServer.getInputStream());
+	            while (true) {
+	                String xmlString = (String) in.readObject();
+	                XMLDecoder decoder = new XMLDecoder(new ByteArrayInputStream(xmlString.getBytes()));
+	                Command cmd = (Command) decoder.readObject();
+	                decoder.close();
+	                switch(cmd.getCommand())
+	                {
+	                	case "add":
+	                		canvas.addShape(cmd.getShape());
+	                		//dTable.addRow(cmd.getShape().getShapeModel());
+	                		break;
+	                	case "remove":
+	                		canvas.setSelected(cmd.getShape());
+	                		canvas.removeSelected();
+	                		//dTable.removeRow(cmd.getShape().getShapeModel());
+	                		break;
+	                	case "front":
+	                		canvas.moveFront();
+	                		//dTable.moveRowUp(cmd.getShape().getShapeModel());
+	                		break;
+	                	case "back":
+	                		canvas.moveBack();
+	                		//dTable.moveRowDown(cmd.getShape().getShapeModel());
+	                		break;
+	                	case "change":
+	                		//canvas.update((cmd.getShape());
+	                		//dTable.updateRow(cmd.getShape().getShapeModel());
+	                		break;
+	                	case "reset":
+	                		canvas.reset();
+	                		//dTable.reset();
+	                		break;
+	                }
+	            }
+	        }
+	        catch (Exception ex) { // IOException and ClassNotFoundException
+	        	ex.printStackTrace();
+	        	JOptionPane.showMessageDialog(rootPane, "Failed to Connect. Please restart the application.");
+	        	System.exit(0); //bad way to handle
+	        }				   
+		}
+	}
 }
 
